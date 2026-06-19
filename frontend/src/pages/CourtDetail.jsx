@@ -67,10 +67,10 @@ export default function CourtDetail() {
 
       <div style={styles.header}>
         <img
-          src={court.image || 'https://via.placeholder.com/900x300?text=Pista'}
+          src={court.image || 'https://placehold.co/900x300/1e293b/4ade80?text=Pista+de+Padel'}
           alt={court.name}
           style={styles.img}
-          onError={(e) => { e.target.src = 'https://via.placeholder.com/900x300?text=Pista'; }}
+          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/900x300/1e293b/4ade80?text=Pista+de+Padel'; }}
         />
       </div>
 

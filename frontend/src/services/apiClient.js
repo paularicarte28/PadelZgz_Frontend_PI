@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -8,7 +8,6 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor: añadir token JWT a cada petición
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('padelzgz_token');
   if (token) {
@@ -17,7 +16,6 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor: manejar 401 globalmente (token expirado)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

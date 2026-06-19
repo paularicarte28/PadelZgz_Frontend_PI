@@ -1,119 +1,109 @@
-# 🎾 PadelZGZ – AA2 Diseño de Interfaces
+# PadelZGZ Frontend
 
-Aplicación web de reserva de pistas de pádel en Zaragoza. Desarrollada para la Actividad de Aprendizaje 2 de la asignatura **Diseño de Interfaces** (2º DAM – SEAS / Fundación San Valero).
+Aplicación web para la reserva de pistas de pádel en Zaragoza.
+
+**🔗 Backend API:** [paularicarte28/padelzgz-backend](https://github.com/paularicarte28/padelzgz-backend)
+
+---
 
 ## Stack tecnológico
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | React 18 + Vite + React Router v6 |
+| Frontend | React 18 + Vite |
+| Routing | React Router v6 |
 | Estado global | Context API + useReducer |
-| Backend | Node.js + Express |
+| HTTP | Axios (interceptores JWT) |
+| Backend BFF | Node.js 20 + Express |
 | Base de datos | SQLite (better-sqlite3) |
-| Autenticación | JWT + bcryptjs |
-| Testing unitario | Vitest + Testing Library (frontend) / Jest + Supertest (backend) |
-| Testing E2E | Playwright |
-| Despliegue | Docker + Docker Compose |
-| API externa | Open-Meteo (tiempo en Zaragoza) |
+| Tests unitarios | Vitest + Testing Library (22 tests) |
+| Tests E2E | Playwright (7 flujos) |
+| Contenedores | Docker + Docker Compose |
+| API externa | Open-Meteo (meteorología, sin API key) |
 
-## Arranque en local (sin Docker)
-
-```bash
-# Backend
-cd backend
-npm install
-npm start          # → http://localhost:3001
-
-# Frontend (en otra terminal)
-cd frontend
-npm install
-npm run dev        # → http://localhost:5173
-```
-
-## Arranque con Docker
-
-```bash
-docker-compose up --build
-# Frontend → http://localhost:5173
-# Backend  → http://localhost:3001
-```
-
-## Tests
-
-```bash
-# Backend (Jest + Supertest)
-cd backend
-npm test
-
-# Frontend (Vitest)
-cd frontend
-npm test
-
-# E2E (Playwright) — requiere backend y frontend corriendo
-cd frontend
-npm run test:e2e
-```
-
-## Cuentas de prueba
-
-| Rol | Email | Contraseña |
-|-----|-------|-----------|
-| Admin | admin@padelzgz.com | admin123 |
-| Usuario | carlos@email.com | user123 |
-| Usuario | laura@email.com | user123 |
+---
 
 ## Estructura del proyecto
 
 ```
-padelzgz-aa2/
-├── backend/
+├── frontend/          # React 18 + Vite
 │   ├── src/
-│   │   ├── controllers/   authController, courtsController, reservationsController
-│   │   ├── db/            database.js (init + seed SQLite)
-│   │   ├── middleware/    auth.js (JWT + rol admin)
-│   │   ├── routes/        auth, courts, reservations
-│   │   └── index.js       servidor Express
-│   └── tests/
-│       └── auth.test.js
-├── frontend/
-│   ├── src/
-│   │   ├── context/       AuthContext.jsx (Context + reducer)
-│   │   ├── services/      apiClient, authService, courtsService, reservationsService, weatherService
-│   │   ├── hooks/         useCourts, useReservations
+│   │   ├── context/   # AuthContext con useReducer
+│   │   ├── hooks/     # useCourts, useReservations
+│   │   ├── pages/     # Home, Login, Register, CourtDetail, MisReservas, AdminDashboard
 │   │   ├── components/
-│   │   │   ├── layout/    Navbar, ProtectedRoute
-│   │   │   └── ui/        CourtCard, SearchBar, WeatherBanner, Feedback
-│   │   ├── pages/         Home, Login, Register, CourtDetail, MisReservas, AdminDashboard
-│   │   └── utils/         formatters.js
-│   ├── tests/             app.test.jsx (Vitest)
-│   └── e2e/               padelzgz.spec.js (Playwright)
-└── docker-compose.yml
+│   │   └── services/  # Capa de abstracción sobre Axios
+│   ├── tests/         # Vitest + Testing Library
+│   └── e2e/           # Playwright
+│
+└── backend/           # Node.js + Express + SQLite
+    ├── src/
+    │   ├── controllers/
+    │   ├── routes/
+    │   ├── middleware/ # Auth JWT
+    │   └── db/
+    └── tests/         # Jest + Supertest
 ```
 
-## Endpoints API
+---
 
-### Auth
-| Método | Ruta | Acceso |
-|--------|------|--------|
-| POST | /api/auth/register | Público |
-| POST | /api/auth/login | Público |
-| GET | /api/auth/me | Autenticado |
+## Funcionalidades
 
-### Courts
-| Método | Ruta | Acceso |
-|--------|------|--------|
-| GET | /api/courts | Público |
-| GET | /api/courts/:id | Público |
-| POST | /api/courts | Admin |
-| PUT | /api/courts/:id | Admin |
-| DELETE | /api/courts/:id | Admin |
+- 🌤️ **Banner meteorológico** — temperatura y condiciones en Zaragoza (Open-Meteo)
+- 🔍 **Filtrado reactivo** de pistas por zona, tipo y precio
+- 🔐 **Autenticación JWT** — registro, login, sesión persistente
+- 📅 **Reserva de pistas** — selección de franja horaria, cálculo de precio
+- 📋 **Mis Reservas** — historial y cancelación
+- ⚙️ **Panel Admin** — métricas globales, gestión de todas las reservas
 
-### Reservations
-| Método | Ruta | Acceso |
-|--------|------|--------|
-| GET | /api/reservations/my | Autenticado |
-| GET | /api/reservations/all | Admin |
-| GET | /api/reservations/stats | Admin |
-| GET | /api/reservations/slots | Autenticado |
-| POST | /api/reservations | Autenticado |
-| PATCH | /api/reservations/:id/cancel | Autenticado |
+---
+
+## Cómo ejecutar
+
+### Con Docker Compose
+
+```bash
+docker-compose up --build
+```
+
+Frontend en `http://localhost:5173` · Backend BFF en `http://localhost:3000`
+
+> Asegúrate de tener el [backend Spring Boot](https://github.com/paularicarte28/padelzgz-backend) corriendo en `localhost:8080`
+
+### En local
+
+```bash
+# Backend Node.js
+cd backend
+npm install
+npm start
+
+# Frontend React
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## Tests
+
+```bash
+# Tests unitarios (Vitest)
+cd frontend
+npm test
+
+# Tests E2E (Playwright)
+cd frontend
+npx playwright test
+
+# Tests backend Node (Jest)
+cd backend
+npm test
+```
+
+---
+
+## Autora
+
+Paula Ricarte — DAM 2024-2025 · Centro San Valero, Zaragoza
