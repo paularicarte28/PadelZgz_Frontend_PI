@@ -1,6 +1,15 @@
 import apiClient from './apiClient';
 
-// Adapta un objeto Pista del Spring Boot al formato que espera el frontend React
+function getImageByType(pista) {
+  const tipo = (pista.tipo || pista.superficie || '').toLowerCase();
+  if (tipo.includes('cesped') || tipo.includes('césped') || tipo.includes('hierba'))
+    return 'https://res.cloudinary.com/duz19cqos/image/upload/pista-de-padel-cesped-3_600x600_b8b1cp.jpeg';
+  if (tipo.includes('cristal') || tipo.includes('interior'))
+    return 'https://res.cloudinary.com/duz19cqos/image/upload/ventajas-de-las-pistas-de-padel-interiores-frente-a-las-exteriores-portada_pprpxf.jpeg';
+  // fallback para cualquier otro tipo
+  return 'https://res.cloudinary.com/duz19cqos/image/upload/pistas-padel-helios-scaled.jpeg_igvdjx.jpeg';
+}
+
 function adaptPista(pista) {
   return {
     id: pista.id,
@@ -14,7 +23,7 @@ function adaptPista(pista) {
     rating: 0,
     reviews: 0,
     active: pista.activa,
-    // Guardamos el objeto original por si se necesita
+    image: getImageByType(pista),
     _raw: pista,
   };
 }
@@ -31,7 +40,6 @@ export const courtsService = {
   },
 
   async create(courtData) {
-    // POST /pistas/club/:clubId
     const clubId = courtData.clubId || 1;
     const { data } = await apiClient.post(`/pistas/club/${clubId}`, {
       numero: courtData.numero || 1,
