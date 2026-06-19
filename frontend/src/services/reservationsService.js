@@ -3,17 +3,19 @@ import apiClient from './apiClient';
 function adaptReserva(r) {
   return {
     id: r.id,
-    court_id: r.pista?.id,
-    court_name: r.pista ? `Pista ${r.pista.numero} — ${r.pista.tipo || r.pista.superficie || ''}` : 'Pista',
+    court_id: r.pistaId,
+    court_name: r.pistaNumero ? `Pista ${r.pistaNumero} — ${r.pistaTipo || r.pistaSuperficie || ''}` : 'Pista',
     date: r.fecha,
     time_slot: r.horaInicio,
     time_end: r.horaFin,
-    zone: r.pista?.club?.ciudad || 'Zaragoza',
+    zone: 'Zaragoza',
     players: 2,
-    price: r.precio || 0,
-    // pagado es si se ha pagado, no si está cancelada — todas son 'confirmed' por defecto
+    price: parseFloat(r.precio) || 0,
     status: 'confirmed',
-    image: null,
+    usuario_nombre: r.usuarioNombre,
+    usuario_apellidos: r.usuarioApellidos,
+    usuario_email: r.usuarioEmail,
+    image: 'https://res.cloudinary.com/duz19cqos/image/upload/pistas-padel-helios-scaled.jpeg_igvdjx.webp',
     created_at: r.fecha,
     _raw: r,
   };
@@ -39,7 +41,7 @@ export const reservationsService = {
       apiClient.get('/pistas'),
     ]);
     const reservas = Array.from(reservasRes.data);
-    const ingresos = reservas.reduce((acc, r) => acc + (r.precio || 0), 0);
+    const ingresos = reservas.reduce((acc, r) => acc + (parseFloat(r.precio) || 0), 0);
     return {
       totalReservations: reservas.length,
       activeReservations: reservas.length,
@@ -85,7 +87,7 @@ export const reservationsService = {
   },
 
   async cancel(id) {
-    const { data } = await apiClient.patch(`/reservas/${id}`, { pagado: false });
-    return adaptReserva(data);
+    await apiClient.delete(`/reservas/${id}`);
+    return { id, status: 'cancelled' };
   },
 };
