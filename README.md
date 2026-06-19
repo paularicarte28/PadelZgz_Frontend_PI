@@ -2,7 +2,7 @@
 
 Aplicación web para la reserva de pistas de pádel en Zaragoza.
 
-**🔗 Backend API:** [paularicarte28/padelzgz-backend](https://github.com/paularicarte28/padelzgz-backend)
+**🔗 Backend API:** [paularicarte28/padelzgz-backend](https://github.com/paularicarte28/PadelZgz_Backend_PI.git)
 
 ---
 
