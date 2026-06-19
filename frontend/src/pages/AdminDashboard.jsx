@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { reservationsService } from '../services/reservationsService';
-import { courtsService } from '../services/courtsService';
+import { courtsService, buildClubMap } from '../services/courtsService';
 import apiClient from '../services/apiClient';
 import { LoadingSpinner, ErrorMessage, EmptyState, StatusBadge } from '../components/ui/Feedback';
 import { formatDate, formatPrice } from '../utils/formatters';
@@ -45,17 +45,19 @@ export default function AdminDashboard() {
   async function loadAll() {
     setLoading(true);
     try {
-      const [res, st, cts, cls, usrs] = await Promise.all([
+      const [res, st, cls, usrs] = await Promise.all([
         reservationsService.getAll(),
         reservationsService.getStats(),
-        courtsService.getAll(),
         apiClient.get('/clubs'),
         apiClient.get('/usuarios'),
       ]);
+      const clubsArr = Array.from(cls.data);
+      const clubMap = buildClubMap(clubsArr);
+      const cts = await courtsService.getAll(clubMap);
       setReservations(res);
       setStats(st);
       setCourts(cts);
-      setClubs(Array.from(cls.data));
+      setClubs(clubsArr);
       setUsuarios(Array.from(usrs.data));
     } catch {
       setError('Error al cargar datos');
@@ -143,19 +145,21 @@ export default function AdminDashboard() {
       };
       if (pistaModal.mode === 'create') {
         const { data } = await apiClient.post(`/pistas/club/${d.clubId}`, payload);
+        const clubObj = clubs.find(c => String(c.id) === String(d.clubId));
         setCourts(prev => [...prev, {
           id: data.id,
-          name: `Pista ${data.numero}`,
-          club: '',
-          zone: 'Zaragoza',
-          address: '',
+          name: `Pista ${data.numero}${clubObj ? ' - ' + clubObj.nombre : ''}`,
+          clubId: clubObj?.id || null,
+          club: clubObj?.nombre || '',
+          zone: clubObj?.ciudad || 'Zaragoza',
+          address: clubObj?.direccion || '',
           type: data.interior ? 'indoor' : 'outdoor',
           surface: data.superficie || data.tipo,
           price: data.precioHora,
           rating: 0,
           reviews: 0,
           active: data.activa,
-          image: 'https://res.cloudinary.com/duz19cqos/image/upload/pistas-padel-helios-scaled.jpeg_igvdjx.webp',
+          image: 'https://res.cloudinary.com/duz19cqos/image/upload/pistas-padel-helios-scaled.jpeg_igvdjx.jpeg',
           _raw: data,
         }]);
       } else {
@@ -292,7 +296,7 @@ export default function AdminDashboard() {
             <table style={styles.table}>
               <thead>
                 <tr style={styles.thead}>
-                  {['#','Nombre','Tipo','Superficie','Precio/h','Estado','Acciones'].map(l => (
+                  {['#','Nombre','Club','Tipo','Superficie','Precio/h','Estado','Acciones'].map(l => (
                     <th key={l} style={styles.th}>{l}</th>
                   ))}
                 </tr>
@@ -302,6 +306,7 @@ export default function AdminDashboard() {
                   <tr key={c.id} style={{ background: i % 2 === 0 ? '#1e293b' : '#172033' }}>
                     <td style={styles.td}>{c.id}</td>
                     <td style={styles.td}>{c.name}</td>
+                    <td style={styles.td}>{c.club || '—'}</td>
                     <td style={styles.td}>{c.type === 'indoor' ? '🏠 Interior' : '☀️ Exterior'}</td>
                     <td style={styles.td}>{c.surface || '—'}</td>
                     <td style={styles.td}>{formatPrice(c.price)}</td>
@@ -452,7 +457,7 @@ export default function AdminDashboard() {
                   onChange={e => setPistaModal(m => ({ ...m, data: { ...m.data, clubId: e.target.value } }))}
                   style={styles.input}>
                   <option value="">Selecciona un club</option>
-                  {clubs.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  {clubs.filter(c => c.activo).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                 </select>
               </div>
             )}
